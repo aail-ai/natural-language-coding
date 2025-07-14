@@ -1,0 +1,1337 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dice Analytics Studio</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
+            min-height: 100vh;
+            color: #333;
+            overflow-x: hidden;
+            position: relative;
+        }
+
+        /* Animated background particles */
+        .background-animation {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        .particle {
+            position: absolute;
+            width: 4px;
+            height: 4px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 50%;
+            animation: float 6s ease-in-out infinite;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0px) rotate(0deg); }
+            50% { transform: translateY(-20px) rotate(180deg); }
+        }
+
+        .container {
+            position: relative;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            z-index: 2;
+            padding: 20px;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        /* Header with beautiful illustration */
+        .header {
+            text-align: center;
+            padding: 40px 0 30px;
+            position: relative;
+        }
+
+        .header::before {
+            content: '';
+            position: absolute;
+            top: -20px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 120px;
+            height: 120px;
+            background: linear-gradient(45deg, #ff6b6b, #4ecdc4, #45b7d1, #96ceb4, #ffeaa7, #dda0dd);
+            border-radius: 50%;
+            opacity: 0.1;
+            animation: pulse 3s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: translateX(-50%) scale(1); }
+            50% { transform: translateX(-50%) scale(1.1); }
+        }
+
+        .header h1 {
+            font-size: 3.5rem;
+            font-weight: 700;
+            margin-bottom: 10px;
+            background: linear-gradient(135deg, #ffffff 0%, #f0f0f0 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            text-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+            letter-spacing: -2px;
+            position: relative;
+            z-index: 2;
+        }
+
+        .header .subtitle {
+            font-size: 1.2rem;
+            color: rgba(255, 255, 255, 0.9);
+            font-weight: 400;
+            margin-bottom: 30px;
+        }
+
+        /* Main content layout */
+        .main-content {
+            display: grid;
+            grid-template-columns: 350px 1fr;
+            gap: 30px;
+            flex: 1;
+            align-items: start;
+        }
+
+        /* Control panel */
+        .control-panel {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            border-radius: 24px;
+            padding: 30px;
+            box-shadow: 
+                0 20px 40px rgba(0, 0, 0, 0.1),
+                0 8px 16px rgba(0, 0, 0, 0.05),
+                inset 0 1px 0 rgba(255, 255, 255, 0.8);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            position: sticky;
+            top: 20px;
+        }
+
+        .control-panel h2 {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #2c3e50;
+            margin-bottom: 25px;
+            text-align: center;
+            background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .input-group {
+            margin-bottom: 25px;
+        }
+
+        .input-group label {
+            display: block;
+            font-weight: 600;
+            color: #2c3e50;
+            margin-bottom: 8px;
+            font-size: 14px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .input-wrapper {
+            position: relative;
+        }
+
+        .input-wrapper input {
+            width: 100%;
+            padding: 15px 20px;
+            border: 2px solid #e8ecf0;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 500;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            background: rgba(255, 255, 255, 0.8);
+        }
+
+        .input-wrapper input:focus {
+            outline: none;
+            border-color: #007AFF;
+            box-shadow: 0 0 0 4px rgba(0, 122, 255, 0.1);
+            background: rgba(255, 255, 255, 1);
+            transform: translateY(-1px);
+        }
+
+        .range-indicator {
+            font-size: 12px;
+            color: #6c757d;
+            margin-top: 5px;
+            text-align: center;
+        }
+
+        .checkbox-input {
+            margin-right: 8px;
+            transform: scale(1.2);
+        }
+
+        .checkbox-label {
+            font-size: 14px;
+            color: #2c3e50;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+        }
+
+        .select-input {
+            width: 100%;
+            padding: 15px 20px;
+            border: 2px solid #e8ecf0;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 500;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            background: rgba(255, 255, 255, 0.8);
+            cursor: pointer;
+        }
+
+        .select-input:focus {
+            outline: none;
+            border-color: #007AFF;
+            box-shadow: 0 0 0 4px rgba(0, 122, 255, 0.1);
+            background: rgba(255, 255, 255, 1);
+            transform: translateY(-1px);
+        }
+
+        .range-input {
+            width: 100%;
+            height: 8px;
+            border-radius: 4px;
+            background: #e8ecf0;
+            outline: none;
+            cursor: pointer;
+        }
+
+        .range-input::-webkit-slider-thumb {
+            appearance: none;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: #007AFF;
+            cursor: pointer;
+            box-shadow: 0 2px 8px rgba(0, 122, 255, 0.3);
+            transition: all 0.2s ease;
+        }
+
+        .range-input::-webkit-slider-thumb:hover {
+            transform: scale(1.1);
+            box-shadow: 0 4px 12px rgba(0, 122, 255, 0.4);
+        }
+
+        .range-value {
+            text-align: center;
+            font-weight: 600;
+            color: #007AFF;
+            margin-top: 8px;
+            font-size: 16px;
+        }
+
+        .weighted-options {
+            background: rgba(255, 248, 220, 0.8);
+            border-radius: 12px;
+            padding: 15px;
+            margin-top: 10px;
+            border: 1px solid rgba(255, 193, 7, 0.3);
+        }
+
+        .action-buttons {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .btn {
+            padding: 16px 24px;
+            border: none;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #007AFF 0%, #0056CC 100%);
+            color: white;
+            box-shadow: 0 4px 15px rgba(0, 122, 255, 0.3);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0, 122, 255, 0.4);
+        }
+
+        .btn-secondary {
+            background: linear-gradient(135deg, #6c757d 0%, #495057 100%);
+            color: white;
+            box-shadow: 0 4px 15px rgba(108, 117, 125, 0.3);
+        }
+
+        .btn-secondary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(108, 117, 125, 0.4);
+        }
+
+        .btn:disabled {
+            background: #e9ecef;
+            color: #6c757d;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        /* Results area */
+        .results-area {
+            display: flex;
+            flex-direction: column;
+            gap: 25px;
+        }
+
+        .dice-visualization {
+            background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(20px);
+            border-radius: 20px;
+            padding: 30px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            box-shadow: 
+                0 15px 35px rgba(0, 0, 0, 0.1),
+                inset 0 1px 0 rgba(255, 255, 255, 0.3);
+            min-height: 300px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .dice-grid {
+            display: grid;
+            gap: 4px;
+            max-height: 500px;
+            overflow-y: auto;
+            padding: 10px;
+            justify-content: center;
+            align-content: start;
+        }
+
+        .dice-grid::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .dice-grid::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 4px;
+        }
+
+        .dice-grid::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.3);
+            border-radius: 4px;
+        }
+
+        .dice {
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            color: white;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+            position: relative;
+        }
+
+        .dice.rolling {
+            animation: diceRoll 0.8s ease-in-out;
+        }
+
+        @keyframes diceRoll {
+            0% { transform: rotateX(0deg) rotateY(0deg) scale(1); }
+            25% { transform: rotateX(180deg) rotateY(90deg) scale(1.1); }
+            50% { transform: rotateX(360deg) rotateY(180deg) scale(0.9); }
+            75% { transform: rotateX(540deg) rotateY(270deg) scale(1.1); }
+            100% { transform: rotateX(720deg) rotateY(360deg) scale(1); }
+        }
+
+        .welcome-message {
+            text-align: center;
+            color: rgba(255, 255, 255, 0.8);
+            font-size: 1.3rem;
+            font-weight: 500;
+            padding: 60px 20px;
+            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200"><defs><pattern id="dice-pattern" patternUnits="userSpaceOnUse" width="40" height="40"><rect width="40" height="40" fill="none"/><circle cx="10" cy="10" r="2" fill="white" opacity="0.1"/><circle cx="30" cy="30" r="2" fill="white" opacity="0.1"/></pattern></defs><rect width="200" height="200" fill="url(%23dice-pattern)"/></svg>') center/cover;
+        }
+
+        /* Analytics dashboard */
+        .analytics-dashboard {
+            background: rgba(255, 255, 255, 0.98);
+            backdrop-filter: blur(20px);
+            border-radius: 24px;
+            padding: 30px;
+            box-shadow: 
+                0 20px 40px rgba(0, 0, 0, 0.1),
+                0 8px 16px rgba(0, 0, 0, 0.05),
+                inset 0 1px 0 rgba(255, 255, 255, 0.8);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .analytics-dashboard.hidden {
+            display: none;
+        }
+
+        .analytics-dashboard h3 {
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: #2c3e50;
+            margin-bottom: 25px;
+            text-align: center;
+            background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .pie-chart-container {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 30px;
+        }
+
+        .pie-chart {
+            width: 300px;
+            height: 300px;
+            border-radius: 50%;
+            position: relative;
+            background: conic-gradient(
+                #FF6B6B 0deg,
+                #FF6B6B 60deg,
+                #4ECDC4 60deg,
+                #4ECDC4 120deg,
+                #45B7D1 120deg,
+                #45B7D1 180deg,
+                #96CEB4 180deg,
+                #96CEB4 240deg,
+                #FFEAA7 240deg,
+                #FFEAA7 300deg,
+                #DDA0DD 300deg,
+                #DDA0DD 360deg
+            );
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+        }
+
+        .chart-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 25px;
+        }
+
+        .chart-item {
+            background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
+            padding: 15px;
+            border-radius: 12px;
+            border: 1px solid rgba(0, 122, 255, 0.1);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+            text-align: center;
+        }
+
+        .chart-item::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: var(--chart-color);
+            border-radius: 12px 12px 0 0;
+        }
+
+        .chart-item:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+        }
+
+        .chart-label {
+            font-weight: 600;
+            color: #2c3e50;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            font-size: 0.9rem;
+        }
+
+        .chart-value {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--chart-color);
+            margin-bottom: 5px;
+        }
+
+        .chart-percentage {
+            font-size: 1.1rem;
+            color: #2c3e50;
+            font-weight: 600;
+        }
+
+
+
+        /* Responsive design */
+        @media (max-width: 1024px) {
+            .main-content {
+                grid-template-columns: 1fr;
+                gap: 20px;
+            }
+            
+            .control-panel {
+                position: relative;
+                top: 0;
+                margin-bottom: 20px;
+            }
+            
+            .header h1 {
+                font-size: 2.5rem;
+            }
+
+            .pie-chart {
+                width: 250px;
+                height: 250px;
+            }
+
+            .chart-container {
+                grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+                gap: 10px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 10px;
+            }
+            
+            .header {
+                padding: 15px 0 20px;
+            }
+            
+            .header h1 {
+                font-size: 1.8rem;
+                letter-spacing: -1px;
+            }
+
+            .header .subtitle {
+                font-size: 1rem;
+                margin-bottom: 20px;
+            }
+            
+            .control-panel {
+                padding: 20px;
+                border-radius: 16px;
+            }
+
+            .control-panel h2 {
+                font-size: 1.3rem;
+                margin-bottom: 20px;
+            }
+
+            .input-group {
+                margin-bottom: 20px;
+            }
+
+            .input-group label {
+                font-size: 12px;
+                margin-bottom: 6px;
+            }
+
+            .input-wrapper input,
+            .select-input {
+                padding: 12px 16px;
+                font-size: 14px;
+                border-radius: 10px;
+            }
+
+            .btn {
+                padding: 14px 20px;
+                font-size: 14px;
+                border-radius: 10px;
+            }
+
+            .dice-visualization {
+                padding: 20px;
+                border-radius: 16px;
+                min-height: 250px;
+            }
+
+            .dice-grid {
+                gap: 2px;
+                max-height: 350px;
+                padding: 5px;
+            }
+
+            .welcome-message {
+                font-size: 1.1rem;
+                padding: 40px 15px;
+            }
+
+            .analytics-dashboard {
+                padding: 20px;
+                border-radius: 16px;
+            }
+
+            .analytics-dashboard h3 {
+                font-size: 1.5rem;
+                margin-bottom: 20px;
+            }
+
+            .pie-chart {
+                width: 200px;
+                height: 200px;
+            }
+
+            .pie-chart-container {
+                margin-bottom: 20px;
+            }
+
+            .chart-container {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 8px;
+            }
+
+            .chart-item {
+                padding: 12px;
+                border-radius: 10px;
+            }
+
+            .chart-label {
+                font-size: 0.8rem;
+                margin-bottom: 6px;
+                gap: 4px;
+            }
+
+            .chart-value {
+                font-size: 1.3rem;
+                margin-bottom: 4px;
+            }
+
+            .chart-percentage {
+                font-size: 1rem;
+            }
+
+            .weighted-options {
+                padding: 12px;
+                border-radius: 10px;
+            }
+
+            .range-value {
+                font-size: 14px;
+                margin-top: 6px;
+            }
+
+            .range-indicator {
+                font-size: 11px;
+                margin-top: 4px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .container {
+                padding: 8px;
+            }
+
+            .header h1 {
+                font-size: 1.5rem;
+                letter-spacing: 0;
+            }
+
+            .header .subtitle {
+                font-size: 0.9rem;
+            }
+
+            .control-panel {
+                padding: 16px;
+            }
+
+            .control-panel h2 {
+                font-size: 1.2rem;
+                margin-bottom: 16px;
+            }
+
+            .input-group {
+                margin-bottom: 16px;
+            }
+
+            .input-wrapper input,
+            .select-input {
+                padding: 10px 14px;
+                font-size: 13px;
+            }
+
+            .btn {
+                padding: 12px 18px;
+                font-size: 13px;
+            }
+
+            .dice-visualization {
+                padding: 16px;
+                min-height: 200px;
+            }
+
+            .dice-grid {
+                max-height: 300px;
+            }
+
+            .welcome-message {
+                font-size: 1rem;
+                padding: 30px 10px;
+            }
+
+            .analytics-dashboard {
+                padding: 16px;
+            }
+
+            .analytics-dashboard h3 {
+                font-size: 1.3rem;
+                margin-bottom: 16px;
+            }
+
+            .pie-chart {
+                width: 160px;
+                height: 160px;
+            }
+
+            .pie-chart-container {
+                margin-bottom: 16px;
+            }
+
+            .chart-container {
+                grid-template-columns: 1fr;
+                gap: 6px;
+            }
+
+            .chart-item {
+                padding: 10px;
+            }
+
+            .chart-label {
+                font-size: 0.75rem;
+                margin-bottom: 4px;
+            }
+
+            .chart-value {
+                font-size: 1.2rem;
+            }
+
+            .chart-percentage {
+                font-size: 0.9rem;
+            }
+
+            .action-buttons {
+                gap: 12px;
+            }
+
+            .weighted-options {
+                padding: 10px;
+            }
+        }
+
+        /* Touch-friendly improvements */
+        @media (hover: none) and (pointer: coarse) {
+            .btn {
+                min-height: 44px;
+                padding: 16px 24px;
+            }
+
+            .input-wrapper input,
+            .select-input {
+                min-height: 44px;
+                padding: 12px 16px;
+            }
+
+            .checkbox-input {
+                min-width: 20px;
+                min-height: 20px;
+                transform: scale(1.4);
+            }
+
+            .range-input {
+                height: 12px;
+            }
+
+            .range-input::-webkit-slider-thumb {
+                width: 24px;
+                height: 24px;
+            }
+
+            .chart-item:hover {
+                transform: none;
+            }
+
+            .btn:hover {
+                transform: none;
+            }
+
+            .input-wrapper input:focus {
+                transform: none;
+            }
+
+            .select-input:focus {
+                transform: none;
+            }
+        }
+
+        .hidden {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="background-animation" id="backgroundAnimation"></div>
+    
+    <div class="container">
+        <header class="header">
+            <h1>🎲 Dice Analytics Studio</h1>
+            <p class="subtitle">Visualize probability through beautiful dice simulations</p>
+        </header>
+
+        <main class="main-content">
+            <aside class="control-panel">
+                <h2>⚙️ Simulation Controls</h2>
+                
+                <div class="input-group">
+                    <label for="numThrows">Number of Throws</label>
+                    <div class="input-wrapper">
+                        <input type="number" id="numThrows" value="100" min="1" max="1000">
+                    </div>
+                    <div class="range-indicator">Range: 1 - 1000 throws</div>
+                </div>
+
+                <div class="input-group">
+                    <label for="weightedDice">⚖️ Weighted Dice</label>
+                    <div class="input-wrapper">
+                        <input type="checkbox" id="weightedDice" class="checkbox-input">
+                        <label for="weightedDice" class="checkbox-label">Enable weighted dice</label>
+                    </div>
+                </div>
+
+                <div class="weighted-options hidden" id="weightedOptions">
+                    <div class="input-group">
+                        <label for="weightedFace">Weighted Face</label>
+                        <div class="input-wrapper">
+                            <select id="weightedFace" class="select-input">
+                                <option value="1">Face 1</option>
+                                <option value="2">Face 2</option>
+                                <option value="3">Face 3</option>
+                                <option value="4">Face 4</option>
+                                <option value="5">Face 5</option>
+                                <option value="6">Face 6</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="input-group">
+                        <label for="weightBonus">Weight Bonus</label>
+                        <div class="input-wrapper">
+                            <input type="range" id="weightBonus" min="1" max="10" value="5" class="range-input">
+                            <div class="range-value" id="weightBonusValue">+5%</div>
+                        </div>
+                        <div class="range-indicator">Range: +1% to +10% chance</div>
+                    </div>
+                </div>
+
+                <div class="action-buttons">
+                    <button class="btn btn-primary" id="startBtn">
+                        🚀 Start Simulation
+                    </button>
+                    <button class="btn btn-secondary" id="resetBtn">
+                        🔄 Reset
+                    </button>
+                </div>
+            </aside>
+
+            <section class="results-area">
+                <div class="dice-visualization">
+                    <div class="welcome-message" id="welcomeMessage">
+                        🎯 Configure your simulation and click "Start Simulation" to begin<br>
+                        <small>Watch as each dice rolls with beautiful animations</small>
+                    </div>
+                    <div class="dice-grid hidden" id="diceGrid"></div>
+                </div>
+
+                <div class="analytics-dashboard hidden" id="analyticsDashboard">
+                    <h3>📊 Probability Analysis</h3>
+                    <div class="pie-chart-container">
+                        <div class="pie-chart" id="pieChart"></div>
+                    </div>
+                    <div class="chart-container" id="chartContainer"></div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+
+
+    <script>
+        class DiceAnalyticsStudio {
+            constructor() {
+                this.results = {};
+                this.totalThrows = 0;
+                this.isRunning = false;
+                this.diceColors = {
+                    1: 'linear-gradient(135deg, #FF6B6B 0%, #FF8E8E 100%)',
+                    2: 'linear-gradient(135deg, #4ECDC4 0%, #6DD5ED 100%)',
+                    3: 'linear-gradient(135deg, #45B7D1 0%, #96C93D 100%)',
+                    4: 'linear-gradient(135deg, #96CEB4 0%, #FFECD2 100%)',
+                    5: 'linear-gradient(135deg, #FFEAA7 0%, #FFCC02 100%)',
+                    6: 'linear-gradient(135deg, #DDA0DD 0%, #98D8C8 100%)'
+                };
+                this.solidColors = {
+                    1: '#FF6B6B',
+                    2: '#4ECDC4',
+                    3: '#45B7D1',
+                    4: '#96CEB4',
+                    5: '#FFEAA7',
+                    6: '#DDA0DD'
+                };
+                
+                this.initializeElements();
+                this.bindEvents();
+                this.createBackgroundAnimation();
+            }
+
+            initializeElements() {
+                this.numThrowsInput = document.getElementById('numThrows');
+                this.startBtn = document.getElementById('startBtn');
+                this.resetBtn = document.getElementById('resetBtn');
+                this.welcomeMessage = document.getElementById('welcomeMessage');
+                this.diceGrid = document.getElementById('diceGrid');
+                this.analyticsDashboard = document.getElementById('analyticsDashboard');
+                this.chartContainer = document.getElementById('chartContainer');
+                this.pieChart = document.getElementById('pieChart');
+                this.weightedDiceCheckbox = document.getElementById('weightedDice');
+                this.weightedOptions = document.getElementById('weightedOptions');
+                this.weightedFaceSelect = document.getElementById('weightedFace');
+                this.weightBonusInput = document.getElementById('weightBonus');
+                this.weightBonusValue = document.getElementById('weightBonusValue');
+            }
+
+            bindEvents() {
+                this.startBtn.addEventListener('click', () => this.startSimulation());
+                this.resetBtn.addEventListener('click', () => this.reset());
+                this.numThrowsInput.addEventListener('input', () => this.validateInput());
+                this.weightedDiceCheckbox.addEventListener('change', () => this.toggleWeightedOptions());
+                this.weightBonusInput.addEventListener('input', () => this.updateWeightDisplay());
+            }
+
+            validateInput() {
+                const value = parseInt(this.numThrowsInput.value);
+                if (value < 1) this.numThrowsInput.value = 1;
+                if (value > 1000) this.numThrowsInput.value = 1000;
+            }
+
+            toggleWeightedOptions() {
+                if (this.weightedDiceCheckbox.checked) {
+                    this.weightedOptions.classList.remove('hidden');
+                } else {
+                    this.weightedOptions.classList.add('hidden');
+                }
+            }
+
+            updateWeightDisplay() {
+                const value = this.weightBonusInput.value;
+                this.weightBonusValue.textContent = `+${value}%`;
+            }
+
+            rollWeightedDice() {
+                if (!this.weightedDiceCheckbox.checked) {
+                    // Normal fair dice
+                    return Math.floor(Math.random() * 6) + 1;
+                }
+
+                // Weighted dice logic
+                const weightedFace = parseInt(this.weightedFaceSelect.value);
+                const weightBonus = parseInt(this.weightBonusInput.value);
+                
+                // Calculate probabilities
+                // Normal probability for each face: 16.67% (1/6)
+                // Weighted face gets extra probability, others get reduced proportionally
+                const normalProb = 100 / 6; // 16.67%
+                const weightedProb = normalProb + weightBonus;
+                const reducedProb = (100 - weightedProb) / 5; // Distribute remaining among other faces
+                
+                const random = Math.random() * 100;
+                let cumulative = 0;
+                
+                for (let face = 1; face <= 6; face++) {
+                    const probability = face === weightedFace ? weightedProb : reducedProb;
+                    cumulative += probability;
+                    
+                    if (random <= cumulative) {
+                        return face;
+                    }
+                }
+                
+                // Fallback (should never reach here)
+                return 6;
+            }
+
+            getExpectedProbability(face) {
+                if (!this.weightedDiceCheckbox.checked) {
+                    return 16.7; // Normal 1/6 probability
+                }
+
+                const weightedFace = parseInt(this.weightedFaceSelect.value);
+                const weightBonus = parseInt(this.weightBonusInput.value);
+                
+                if (face === weightedFace) {
+                    return (100/6 + weightBonus).toFixed(1);
+                } else {
+                    return ((100 - (100/6 + weightBonus)) / 5).toFixed(1);
+                }
+            }
+
+            createBackgroundAnimation() {
+                const container = document.getElementById('backgroundAnimation');
+                for (let i = 0; i < 15; i++) {
+                    const particle = document.createElement('div');
+                    particle.className = 'particle';
+                    particle.style.left = Math.random() * 100 + '%';
+                    particle.style.top = Math.random() * 100 + '%';
+                    particle.style.animationDelay = Math.random() * 6 + 's';
+                    container.appendChild(particle);
+                }
+            }
+
+            async startSimulation() {
+                if (this.isRunning) return;
+                
+                this.isRunning = true;
+                this.startBtn.disabled = true;
+                this.startBtn.textContent = '🎲 Rolling...';
+                
+                // Update title to show if weighted dice is active
+                const headerTitle = document.querySelector('.header h1');
+                if (this.weightedDiceCheckbox.checked) {
+                    const weightedFace = this.weightedFaceSelect.value;
+                    const weightBonus = this.weightBonusInput.value;
+                    headerTitle.textContent = `🎲 Dice Analytics Studio ⚖️ (Face ${weightedFace} +${weightBonus}%)`;
+                } else {
+                    headerTitle.textContent = '🎲 Dice Analytics Studio';
+                }
+                
+                const numThrows = parseInt(this.numThrowsInput.value);
+                this.totalThrows = numThrows;
+                
+                // Reset results
+                this.results = {};
+                for (let i = 1; i <= 6; i++) {
+                    this.results[i] = 0;
+                }
+
+                // Setup visualization
+                this.setupVisualization(numThrows);
+                
+                // Show analytics dashboard immediately with empty data
+                this.displayAnalytics();
+                
+                try {
+                    // Run simulation with real-time updates
+                    await this.runSimulation(numThrows);
+                } catch (error) {
+                    console.error('Simulation error:', error);
+                }
+                
+                this.isRunning = false;
+                this.startBtn.disabled = false;
+                this.startBtn.textContent = '🚀 Start Simulation';
+            }
+
+            setupVisualization(numThrows) {
+                this.welcomeMessage.classList.add('hidden');
+                this.diceGrid.classList.remove('hidden');
+                this.diceGrid.innerHTML = '';
+                
+                // Calculate dynamic dice size based on number of dice
+                const { diceSize, fontSize, columns, gap } = this.calculateDiceLayout(numThrows);
+                
+                // Apply dynamic grid layout
+                this.diceGrid.style.gridTemplateColumns = `repeat(${columns}, ${diceSize}px)`;
+                this.diceGrid.style.gap = `${gap}px`;
+                
+                // Create dice elements
+                for (let i = 0; i < numThrows; i++) {
+                    const dice = document.createElement('div');
+                    dice.className = 'dice';
+                    dice.id = `dice-${i}`;
+                    dice.textContent = '?';
+                    dice.style.width = `${diceSize}px`;
+                    dice.style.height = `${diceSize}px`;
+                    dice.style.fontSize = `${fontSize}px`;
+                    dice.style.background = 'linear-gradient(135deg, #e9ecef 0%, #f8f9fa 100%)';
+                    dice.style.color = '#6c757d';
+                    this.diceGrid.appendChild(dice);
+                }
+            }
+
+            calculateDiceLayout(numDice) {
+                let diceSize, fontSize, columns, gap;
+                
+                // Check if we're on mobile
+                const isMobile = window.innerWidth <= 768;
+                const isSmallMobile = window.innerWidth <= 480;
+                
+                if (numDice === 1) {
+                    diceSize = isSmallMobile ? 80 : isMobile ? 100 : 120;
+                    fontSize = isSmallMobile ? 32 : isMobile ? 40 : 48;
+                    columns = 1;
+                    gap = 0;
+                } else if (numDice <= 4) {
+                    diceSize = isSmallMobile ? 60 : isMobile ? 70 : 80;
+                    fontSize = isSmallMobile ? 24 : isMobile ? 28 : 32;
+                    columns = Math.min(numDice, 2);
+                    gap = isSmallMobile ? 8 : isMobile ? 10 : 12;
+                } else if (numDice <= 16) {
+                    diceSize = isSmallMobile ? 45 : isMobile ? 50 : 60;
+                    fontSize = isSmallMobile ? 18 : isMobile ? 20 : 24;
+                    columns = isSmallMobile ? Math.min(numDice, 3) : Math.min(numDice, 4);
+                    gap = isSmallMobile ? 6 : isMobile ? 8 : 10;
+                } else if (numDice <= 36) {
+                    diceSize = isSmallMobile ? 35 : isMobile ? 40 : 45;
+                    fontSize = isSmallMobile ? 14 : isMobile ? 16 : 18;
+                    columns = isSmallMobile ? Math.min(numDice, 4) : Math.min(numDice, 6);
+                    gap = isSmallMobile ? 4 : isMobile ? 6 : 8;
+                } else if (numDice <= 100) {
+                    diceSize = isSmallMobile ? 28 : isMobile ? 32 : 35;
+                    fontSize = isSmallMobile ? 11 : isMobile ? 13 : 14;
+                    columns = isSmallMobile ? Math.min(numDice, 6) : Math.min(numDice, 10);
+                    gap = isSmallMobile ? 3 : isMobile ? 4 : 6;
+                } else if (numDice <= 400) {
+                    diceSize = isSmallMobile ? 22 : isMobile ? 25 : 25;
+                    fontSize = isSmallMobile ? 9 : isMobile ? 10 : 12;
+                    columns = isSmallMobile ? Math.min(numDice, 8) : Math.min(numDice, 20);
+                    gap = isSmallMobile ? 2 : isMobile ? 3 : 4;
+                } else {
+                    diceSize = isSmallMobile ? 18 : isMobile ? 20 : 20;
+                    fontSize = isSmallMobile ? 8 : isMobile ? 9 : 10;
+                    columns = isSmallMobile ? Math.min(numDice, 10) : Math.min(numDice, 25);
+                    gap = isSmallMobile ? 2 : isMobile ? 3 : 3;
+                }
+                
+                return { diceSize, fontSize, columns, gap };
+            }
+
+            async runSimulation(numThrows) {
+                // Dynamic batch size based on number of dice
+                const batchSize = this.calculateBatchSize(numThrows);
+                const batches = Math.ceil(numThrows / batchSize);
+                
+                for (let batch = 0; batch < batches; batch++) {
+                    const startIdx = batch * batchSize;
+                    const endIdx = Math.min(startIdx + batchSize, numThrows);
+                    
+                    const batchPromises = [];
+                    for (let i = startIdx; i < endIdx; i++) {
+                        batchPromises.push(this.rollDice(i));
+                    }
+                    
+                    await Promise.all(batchPromises);
+                    
+                    // Update analytics after each batch
+                    this.updateAnalytics();
+                    
+                    // Dynamic delay based on batch size
+                    const delay = this.calculateBatchDelay(numThrows, batchSize);
+                    if (batch < batches - 1 && delay > 0) {
+                        await new Promise(resolve => setTimeout(resolve, delay));
+                    }
+                }
+            }
+
+            calculateBatchSize(numThrows) {
+                if (numThrows <= 10) return 1;        // Roll one by one for small numbers
+                if (numThrows <= 50) return 10;       // Small batches for medium numbers
+                if (numThrows <= 200) return 25;      // Medium batches
+                if (numThrows <= 500) return 50;      // Larger batches for big numbers
+                return 100;                           // Very large batches for 500+ dice
+            }
+
+            calculateBatchDelay(numThrows, batchSize) {
+                if (numThrows <= 10) return 200;      // Slower for small numbers to see each dice
+                if (numThrows <= 50) return 100;      // Medium delay
+                if (numThrows <= 200) return 50;      // Fast for medium numbers
+                return 25;                            // Very fast for large numbers
+            }
+
+            async rollDice(index) {
+                return new Promise((resolve) => {
+                    // Dynamic delay based on total number of dice
+                    const maxDelay = this.totalThrows <= 10 ? 300 : 
+                                   this.totalThrows <= 50 ? 200 : 
+                                   this.totalThrows <= 200 ? 100 : 50;
+                    const delay = Math.random() * maxDelay;
+                    
+                    setTimeout(async () => {
+                        const dice = document.getElementById(`dice-${index}`);
+                        if (dice) {
+                            // Start rolling animation
+                            dice.classList.add('rolling');
+                            dice.style.background = 'linear-gradient(135deg, #007AFF 0%, #5AC8FA 100%)';
+                            dice.style.color = 'white';
+                            
+                            // Dynamic animation time based on number of dice
+                            const animationTime = this.totalThrows <= 10 ? 800 : 
+                                                 this.totalThrows <= 50 ? 600 : 
+                                                 this.totalThrows <= 200 ? 400 : 300;
+                            await new Promise(resolve => setTimeout(resolve, animationTime));
+                            
+                            // Generate result (with optional weighting)
+                            const result = this.rollWeightedDice();
+                            this.results[result] = (this.results[result] || 0) + 1;
+                            
+                            // Update dice display
+                            dice.classList.remove('rolling');
+                            dice.textContent = result;
+                            dice.style.background = this.diceColors[result];
+                            dice.style.color = 'white';
+                        }
+                        resolve();
+                    }, delay);
+                });
+            }
+
+            displayAnalytics() {
+                this.analyticsDashboard.classList.remove('hidden');
+                this.chartContainer.innerHTML = '';
+                
+                for (let i = 1; i <= 6; i++) {
+                    const count = this.results[i] || 0;
+                    const totalRolled = Object.values(this.results).reduce((sum, val) => sum + val, 0);
+                    const percentage = totalRolled > 0 ? ((count / totalRolled) * 100).toFixed(1) : '0.0';
+                    
+                    const chartItem = document.createElement('div');
+                    chartItem.className = 'chart-item';
+                    chartItem.style.setProperty('--chart-color', this.solidColors[i]);
+                    chartItem.id = `chart-${i}`;
+                    
+                    // Calculate expected probability for this face
+                    const expectedProb = this.getExpectedProbability(i);
+                    const expectedText = expectedProb !== 16.7 ? ` (exp: ${expectedProb}%)` : '';
+                    
+                    chartItem.innerHTML = `
+                        <div class="chart-label">
+                            <span>🎲</span>
+                            <span>Face ${i}${expectedText}</span>
+                        </div>
+                        <div class="chart-value">${count}</div>
+                        <div class="chart-percentage">${percentage}%</div>
+                    `;
+                    
+                    this.chartContainer.appendChild(chartItem);
+                }
+                
+                this.updatePieChart();
+            }
+
+            updateAnalytics() {
+                if (!this.analyticsDashboard.classList.contains('hidden')) {
+                    const totalRolled = Object.values(this.results).reduce((sum, val) => sum + val, 0);
+                    
+                    for (let i = 1; i <= 6; i++) {
+                        const count = this.results[i] || 0;
+                        const percentage = totalRolled > 0 ? ((count / totalRolled) * 100).toFixed(1) : '0.0';
+                        
+                        const chartItem = document.getElementById(`chart-${i}`);
+                        if (chartItem) {
+                            const valueElement = chartItem.querySelector('.chart-value');
+                            const percentageElement = chartItem.querySelector('.chart-percentage');
+                            
+                            if (valueElement) valueElement.textContent = count;
+                            if (percentageElement) percentageElement.textContent = `${percentage}%`;
+                        }
+                    }
+                    
+                    this.updatePieChart();
+                }
+            }
+
+            updatePieChart() {
+                const totalRolled = Object.values(this.results).reduce((sum, val) => sum + val, 0);
+                if (totalRolled === 0) return;
+                
+                const percentages = [];
+                let cumulativeAngle = 0;
+                
+                for (let i = 1; i <= 6; i++) {
+                    const count = this.results[i] || 0;
+                    const percentage = (count / totalRolled) * 100;
+                    const angle = (percentage / 100) * 360;
+                    percentages.push({ face: i, percentage, angle, cumulativeAngle });
+                    cumulativeAngle += angle;
+                }
+                
+                // Create conic gradient
+                let gradientStops = [];
+                let currentAngle = 0;
+                
+                for (let i = 0; i < percentages.length; i++) {
+                    const { face, angle } = percentages[i];
+                    const color = this.solidColors[face];
+                    
+                    gradientStops.push(`${color} ${currentAngle}deg`);
+                    currentAngle += angle;
+                    gradientStops.push(`${color} ${currentAngle}deg`);
+                }
+                
+                const gradient = `conic-gradient(${gradientStops.join(', ')})`;
+                this.pieChart.style.background = gradient;
+            }
+
+            reset() {
+                this.results = {};
+                this.totalThrows = 0;
+                this.isRunning = false;
+                this.startBtn.disabled = false;
+                this.startBtn.textContent = '🚀 Start Simulation';
+                this.analyticsDashboard.classList.add('hidden');
+                this.diceGrid.classList.add('hidden');
+                this.welcomeMessage.classList.remove('hidden');
+                this.diceGrid.innerHTML = '';
+                
+                // Reset title
+                const headerTitle = document.querySelector('.header h1');
+                headerTitle.textContent = '🎲 Dice Analytics Studio';
+            }
+        }
+
+        // Initialize the application
+        document.addEventListener('DOMContentLoaded', () => {
+            new DiceAnalyticsStudio();
+        });
+    </script>
+</body>
+</html> 
