@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AiTLE x Sayo Academy x Vibe Coding - Dice Analytics Studio</title>
+    <title>AAIL x AiTLE x Sayo Academy x Vibe Coding - Dice Analytics Studio</title>
     <style>
         * {
             margin: 0;
@@ -116,6 +116,12 @@
             flex-wrap: wrap;
         }
 
+        .logo-container a {
+            display: inline-block;
+            text-decoration: none;
+            transition: all 0.3s ease;
+        }
+
         .logo {
             height: 60px;
             width: auto;
@@ -126,9 +132,10 @@
             padding: 8px;
             backdrop-filter: blur(10px);
             box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            display: block;
         }
 
-        .logo:hover {
+        .logo-container a:hover .logo {
             transform: scale(1.05);
             filter: brightness(1.2) contrast(1.2);
             box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);
@@ -1073,13 +1080,18 @@
     <div class="container">
         <header class="header">
             <div class="logo-container">
-                <img src="aitle.png" alt="AiTLE Logo" class="logo">
-                <img src="aail.png" alt="AAIL Logo" class="logo">
+                <a href="https://www.aail.ai" target="_blank">
+                    <img src="aail.png" alt="AAIL Logo" class="logo">
+                </a>
+                <a href="https://www.aitle.org.hk/" target="_blank">
+                    <img src="aitle.png" alt="AiTLE Logo" class="logo">
+                </a>
             </div>
-            <div class="collaboration-header">AiTLE x Sayo Academy x Vibe Coding</div>
+            <div class="collaboration-header">AAIL x AiTLE x Sayo Academy x Vibe Coding</div>
             <div class="website-links">
-                <a href="https://www.sayo.ai" target="_blank" class="website-link">www.sayo.ai</a>
                 <a href="https://www.aail.ai" target="_blank" class="website-link">www.aail.ai</a>
+                <a href="https://www.aitle.org.hk/" target="_blank" class="website-link">www.aitle.org.hk</a>
+                <a href="https://www.sayo.ai" target="_blank" class="website-link">www.sayo.ai</a>
             </div>
             <h1>🎲 Dice Analytics Studio</h1>
             <p class="subtitle">Visualize probability through beautiful dice simulations</p>
